@@ -5,12 +5,21 @@ using System.IO;
 using System.Runtime;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization;
+using SkatanicStudios.Serialization.Surrogates;
 
 namespace SkatanicStudios.Serialization
 {
     public class SerializationManager
     {
+        //Set this in your project to give a custom extension to the save file.
+        public static string fileExtension = ".save";
 
+        /// <summary>
+        /// Stores a serializable class 
+        /// </summary>
+        /// <param name="savename"></param>
+        /// <param name="saveData"></param>
+        /// <returns></returns>
         public static bool Save(string savename, object saveData)
         {
 
@@ -21,7 +30,7 @@ namespace SkatanicStudios.Serialization
                 Directory.CreateDirectory(Application.persistentDataPath + "/saves");
             }
 
-            string path = Application.persistentDataPath + "/saves/" + savename + ".rpgtr";
+            string path = Application.persistentDataPath + "/saves/" + savename + fileExtension;
 
             FileStream file = File.Create(path);
 
@@ -32,7 +41,10 @@ namespace SkatanicStudios.Serialization
             return true;
 
         }
-
+        /// <summary>
+        /// Returns a list of all the 
+        /// </summary>
+        /// <returns></returns>
         public static string[] GetSaves()
         {
             if (!Directory.Exists(Application.persistentDataPath + "/saves/"))
@@ -43,7 +55,7 @@ namespace SkatanicStudios.Serialization
             return Directory.GetFiles(Application.persistentDataPath + "/saves/");
         }
 
-        public static SaveGame Load(string path)
+        public static object Load(string path)
         {
             if (!File.Exists(path))
             {
@@ -53,12 +65,13 @@ namespace SkatanicStudios.Serialization
             BinaryFormatter binary = GetBinaryFormatter();
 
             FileStream file = File.Open(path, FileMode.Open);
-            SaveGame save = (SaveGame)binary.Deserialize(file);
+            object save = binary.Deserialize(file);
             file.Close();
 
             return save;
         }
 
+        //This allows us to format non-serializable unity classes by converting them to a serializable class. 
         public static BinaryFormatter GetBinaryFormatter()
         {
             BinaryFormatter binary = new BinaryFormatter();
@@ -77,8 +90,6 @@ namespace SkatanicStudios.Serialization
             AnimationCurveSerializationSurrogate acss = new AnimationCurveSerializationSurrogate();
             ss.AddSurrogate(typeof(AnimationCurve), new StreamingContext(StreamingContextStates.All), acss);
 
-
-            // 5. Have the formatter use our surrogate selector
             binary.SurrogateSelector = ss;
 
             return binary;
